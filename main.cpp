@@ -18,8 +18,8 @@ CONFLICT_RESOLUTION_METHOD conflict_resolution_method = BACKTRACKING;
 const uint2 test[3] = {{1,2}, {3,4}, {5,6}};
 
 bool compare_lits_num(int lit1, int lit2){
-	//делаешь в прямом - получается в обратном. Потому что потом
-	//через стек прогоняется.
+	//do it in the direct - it turns out the opposite. Because then
+	//it runs through the stack.
 	return (lit1>lit2);
 }
 bool compare_clauses_size(vector <int> cl1, vector <int> cl2){
@@ -120,16 +120,15 @@ void readClauseR(Rcnf &c, litind* cpl_tmp, vector< vector<int> > &clauses, stack
 		lits_count++;
 		phase = (var > 0);
 		lastlit = var;
-		// делаем из номера переменной и фазы литерал,
-		// соответствующий способу нумерации в основном
-		// массиве: 
+		// we make a literal from the variable number and phase 
+		// corresponding to the numbering method in the main array: 
 		lit  = HVar2Var(var);
 		clause.push_back(lit);
-		//увеличиваем счетчики литералов
+		//increase literal counters
 		assert(lit<VARS_SIZE*2);
 		++cpl_tmp[lit];
-		//считаем разницу между числом положительных и
-		//отрицательных литералов КНФ
+		//consider the difference between the number of positive 
+		// and negative literals CNF
 		//lits_shift_tmp += 1 - 2*(int)phase;
 	}
 	if (lits_count > 1){
@@ -139,7 +138,7 @@ void readClauseR(Rcnf &c, litind* cpl_tmp, vector< vector<int> > &clauses, stack
 	}
 	if (lits_count == 1){
 		unitclauses.push(lastlit);
-		//отматываем счетчик литералов, если литерал был только один
+		//Unwind the literal counter, if there was only one literal
 		--cpl_tmp[lit];
 //		cout << "UC:" << unitclauses.top() << "\n";
 	}
@@ -221,15 +220,14 @@ bool searchtrail(trailword* trail,
 }
 
 litind insertLit(Rcnf& c, litind pos, litind value){
-			// проверяем состояние последней ячейки под
-			// литерал в базе литералов
+			// we check the state of the last cell under 
+			// a literal in the literal database
 			if (c.lits[pos].x==NO_LITIND){
 				c.lits[pos].x = value;
 				return pos;
 			}
 			else{
-				//рекурсивный вызов - ищем дальше
-				//свободную ячейку
+				//recursive call - we look further for a free cell
 				return insertLit(c, pos+1, value);
 				//return pos;
 			}
@@ -250,7 +248,7 @@ void PrintClauseFromRing(const Rcnf& c, litind pos, litind startpos = NO_LITIND,
 }
 */
 
-//TODO: вставлять вотчи одновременно с созданием дизъюнктов
+//TODO: embed watches at the same time as creating clauses
 
 int InsertWatchInClauseRing(const Rcnf& c, var_word *ws, litind pos, litind startpos = NO_LITIND, bool top = true){
 	assert(pos < c.lits_size);
@@ -328,8 +326,8 @@ void SetVar(var_word* vars, trailword* trail, int &trail_end,  const uint &decis
 	}
 #ifdef BJ
 	new_trail_element.reason=reason_lit;
-	//FIXME: Еще костыль! надо чтобы не зависела от порядка
-	//переменных!
+	//FIXME: Another crutch! it is necessary that it does not depend 
+	//on the order of variables!
 	/*
 	if (decision_var_index<top_decision_var_index){
 		new_trail_element.reason=0;
@@ -342,7 +340,7 @@ void SetVar(var_word* vars, trailword* trail, int &trail_end,  const uint &decis
 }
 #ifdef LITCACHE
 void InsertLitCache(Rcnf& c, const int firstlit){
-		//Индусский код, добавляем кэш литералов!
+		//Hindu code, add literal cache!
 		uint2 lit[4];
 		int litpos[4];
 		int j=0;
@@ -438,11 +436,11 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 	for(;;){
 		skipWhitespace(in);
 		if(in.eof()) break;
-		//заголовок DIMACS-файла
+		//DIMACS file header
 		else if((*in == 'p') && match(in, "p cnf")){
 			skipLine(in);
 		}
-		//пропускаем комментарии
+		//skipping comments
 		else
 		       	if(*in == 'c')
 			skipLine(in);
@@ -453,15 +451,15 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 
 	printf("\nFile read time: %.2f", cpuTime() - starttime);
 
-	// ищем последний ненулевой элемент в невыронянном массиве длин
-	// фаз - определяем будущий размер следа
+	// look for the last nonzero element in an unimproved array of 
+	// phase lengths - determine the future size of the trace
 	for(int i=VARS_SIZE*2-1;i>1;i--){
 		if (cpl_tmp[i]>0){
 			c.pl_size=i+1;
 			break;
 		}
 	}
-	//TODO: оптимизировать копирование/создание конечного массива pl
+	//TODO: optimize copy / create final array pl
 	c.pl = (litind*) calloc(c.pl_size, sizeof(litind));
 	for (int i=0; i<c.pl_size; i++){
 		c.pl[i]=cpl_tmp[i];
@@ -471,7 +469,7 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 
 	
 	cout << "\nc lits size w/o alignment:" << c.lits_size ;
-	//первый элемент "+"-фазы  = 1, т.к. 0-переменная имеет 1 негативный литерал
+	//the first element is "+" - phase = 1, because 0-variable has 1 negative literal
 	c.pl[0]=1;
 	c.pl[1]=1;
 	//c.pl[c.pl_size/2]=c.lits_size/2+1;
@@ -486,9 +484,10 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 		assert(((c.pl[i]*sizeof(uintx))%LITS_ALIGNMENT==0) && (c.pl[i]>=orig));
 	}
 	for (int i=1; i<c.pl_size; i++){
-		//превращаем счетчики литералов в номера окончания
-		//литералов фаз. К каждому
-		//значению прибавляем значения всех предыдущих.
+		/*
+		turn literal counters into phase literal end numbers. 
+		To each value we add the values of all the previous ones.
+		 */
 		c.pl[i] += c.pl[i-1];
 	}
 	c.lits_size = c.pl[c.pl_size-1]; 
@@ -501,7 +500,7 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 	}
 
 	starttime = cpuTime();
-	// создаем основной массив 
+	// create the main array
 	//cout << s.nl_size << "\n";
 	c.lits = (uintx*) malloc(c.lits_size*sizeof(uintx));
 	if (c.lits == NULL) exit (1);
@@ -510,7 +509,7 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 		c.lits[i].y = 0;
 	}
 
-	// Заполняем массив соответствия литералов переменным
+	// Fill the array of literal matching variables
 	for (litind i=1; i<c.pl_size; i++){
 		for (litind j=c.pl[i-1]; j<c.pl[i]; j++){
 			/*
@@ -531,15 +530,17 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 	}
 	*/	
 	printf("\n array creation time: %.2f", cpuTime() - starttime);
-	//сортировка на simd-вариант не влияет
+	//sorting does not affect the simd option
 		stable_sort(clauses.begin(),clauses.end(),compare_clauses_size);
-	// переносим дизъюнкты в основной массив из вспомогательного:
-	// проходим по дизъюнктам во вспомогательном массиве
+	/* 
+	we transfer the clauses to the main array from the auxiliary: 
+	we go through the clauses in the auxiliary array
+	 */
 	for (int i=0; i<clauses.size(); i++){
 		int pv;
 		int pos_prev=0;
 		int pos_first;
-		// обрабатываем первый литерал. 0 - временная ссылка
+		// process the first literal. 0 - temporary link
 		stable_sort(clauses[i].begin(),clauses[i].end(),compare_lits_num);
 		pv = clauses[i].back();
 		clauses[i].pop_back();
@@ -547,16 +548,16 @@ void ReadDimacsToRcnf(Rcnf& c, stack <int> &unitclauses, const char* file_name){
 		pos_first = insertLit(c, c.pl[pv-1], pos_prev);
 		//cout << "pos_prev " << pos_prev << " pv " << pv << " vars_end[pv] "<< s.vars_end[pv]<< " shift (pv-1) " << s.vars_end[pv-1] << "\n";
 		pos_prev = pos_first;
-		//TODO:переписать в функционально-рекурсивном стиле
-		//проходим по всем литералам дизъюнкта
+		//TODO: rewrite in functional recursive style
+		//we go through all the literals of the clause
 		while (clauses[i].size()>0){
-			pv = clauses[i].back(); // текущий литерал
-			clauses[i].pop_back(); // текущий литерал
+			pv = clauses[i].back(); // current literal
+			clauses[i].pop_back(); // current literal
 			pos_prev = insertLit(c, c.pl[pv-1], pos_prev);
 			//cout << LitToVar(s, pos_prev) << "\n";
 			//cout << "pos_prev " << pos_prev << " pv " << pv << " shift (pv-1) " << s.vars_end[pv-1] << "\n";
 		}
-		// записываем в первый литерал ссылку на последний
+		// write the link to the last one in the first literal
 		c.lits[pos_first].x=pos_prev;
 		//verifyRing(c,pos_first);
 
@@ -689,7 +690,7 @@ void ConstructRsolverstate(const Rcnf &c, Rsolverstate &s, var_word*
 	trail = (trailword*) malloc(s.model_size*sizeof(trailword));
 	if (trail== NULL) exit (1);
 	trail[0].var=0;
-	// очищаем очередь переменных
+	// clear the variable queue
 	s.BCP_queue_front=s.trail_end+1;
 
 	s.propagations = 0;
@@ -713,7 +714,7 @@ void DeconstructRsolverstate(Rsolverstate &s, var_word* vars, var_word* ws, trai
 bool Preprocess(Rcnf &c, Rsolverstate &s, var_word* vars, var_word*
 		ws, trailword* trail, stack <int> &unitclauses){
 	while (unitclauses.size() > 0){
-		//TODO: предупреждения о повторах и конфликтах
+		//TODO: repeat and conflict warnings
 		if(get_varset(vars, abs(unitclauses.top()))){
 			if(get_varphase(vars, abs(unitclauses.top()))==(unitclauses.top()>0)){
 				unitclauses.pop();
